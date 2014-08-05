@@ -86,7 +86,7 @@ var Pixel = (function() {
         }
 
         return this;
-    }
+    };
 
     Pixel.prototype.sizeSqr = function() {
         var sum = 0;
@@ -94,11 +94,11 @@ var Pixel = (function() {
             sum += this.data[i] * this.data[i];
         }
         return sum;
-    }
+    };
 
     Pixel.prototype.size = function() {
         return Math.sqrt(this.sizeSqr());
-    }
+    };
 
     Pixel.prototype.saturate = function() {
         for (var i = 0; i < CHANNELS; i++) {
@@ -106,7 +106,7 @@ var Pixel = (function() {
                 (this.data[i] < 0 ? 0 : this.data[i]);
         }
         return this;
-    }
+    };
 
     Pixel.prototype.toImage = function(index, img, noAlpha) {
         var ignore = noAlpha || true;
@@ -117,7 +117,7 @@ var Pixel = (function() {
             img.data[index+2] = this.data[2];
             img.data[index+3] = ignore ? 255 : this.data[3];
         }
-    }
+    };
 
     Pixel.prototype.setFloats = function(r, g, b, a) {
         this.setRGBA(r*255, g*255, b*255, a*255);
@@ -149,31 +149,45 @@ var Pixel = (function() {
         return this.divide(this.size());
     };
 
-    Pixel.prototype.luminance = function() {
-        return this.data[0] * 0.21 + this.data[1] * 0.72 + this.data[2] * 0.07;
-    };
-
     Pixel.prototype.r = function() {
         return this.data[0];
     };
 
     Pixel.prototype.g = function() {
-        return this.data[0];
+        return this.data[1];
     };
 
     Pixel.prototype.b = function() {
-        return this.data[0];
+        return this.data[2];
     };
 
     Pixel.prototype.a = function() {
-        return this.data[0];
+        return this.data[3];
     };
 
     Pixel.prototype.transform = function(matrix) {
-        var r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
-        var g = this.r() * matrix[3] + this.g() * matrix[4] + this.b() * matrix[5];
-        var b = this.r() * matrix[6] + this.g() * matrix[7] + this.b() * matrix[8];
-        return this.set(r, g, b, this.a());
+        var r = this.r();
+        var g = this.g();
+        var b = this.b();
+        var a = this.a();
+
+        if (matrix.length == 3) {
+            r = g = b = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
+        } else if (matrix.length == 9) {
+            r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
+            g = this.r() * matrix[3] + this.g() * matrix[4] + this.b() * matrix[5];
+            b = this.r() * matrix[6] + this.g() * matrix[7] + this.b() * matrix[8];
+        } else if (matrix.length == 12) {
+            r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2] + 255 * matrix[3];
+            g = this.r() * matrix[4] + this.g() * matrix[5] + this.b() * matrix[6] + 255 * matrix[7];
+            b = this.r() * matrix[8] + this.g() * matrix[9] + this.b() * matrix[10] + 255 * matrix[11];
+        } else if (matrix.length == 20) {
+            r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2] + this.a() * matrix[3] + 255 * matrix[4];
+            g = this.r() * matrix[5] + this.g() * matrix[6] + this.b() * matrix[7] + this.a() * matrix[8] + 255 * matrix[9];
+            b = this.r() * matrix[10] + this.g() * matrix[11] + this.b() * matrix[12] + this.a() * matrix[13] + 255 * matrix[14];
+            a = this.r() * matrix[15] + this.g() * matrix[16] + this.b() * matrix[17] + this.a() * matrix[18] + 255 * matrix[19];
+        }
+        return this.set(r, g, b, a);
     };
 
     return Pixel;

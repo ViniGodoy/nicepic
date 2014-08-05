@@ -1,6 +1,16 @@
 var nicepic = function() {
     'use strict';
 
+    var GRAYSCALE_MATRIX = [0.21, 0.72, 0.07];
+    var SEPIA_MATRIX = [
+        0.393, 0.769, 0.189,
+        0.349, 0.686, 0.168,
+        0.272, 0.534, 0.131
+    ];
+
+    //-------------------------------------------------------------------------
+    // Utility functions
+    //-------------------------------------------------------------------------
     function wrap(func) {
         var _this = this;
         return function wrapper() {
@@ -16,32 +26,6 @@ var nicepic = function() {
         }
     }
 
-    function createCanvas(width, height) {
-        var canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        return canvas;        
-    }
-
-    function createImageData(width, height) {            
-        var canvas = createCanvas(width, height);        
-        var c = canvas.getContext("2d");            
-        return c.createImageData(width, height);
-    }
-
-    function load(filename) {
-        return new Promise(function(resolve, reject) {
-            var img = new Image();
-            img.onload = function() {
-                var canvas = createCanvas(img.width, img.height);                
-                var c = canvas.getContext("2d");
-                c.drawImage(img, 0, 0);                
-                resolve(c.getImageData(0, 0, canvas.width, canvas.height));
-            };
-            img.src = filename;
-        });
-    }
-
     function eachPixel(img, func, ignore) {
         return new Promise(function(resolve, reject) {
             var out = createImageData(img.width, img.height);
@@ -55,19 +39,45 @@ var nicepic = function() {
         });
     }
 
+    function createCanvas(width, height) {
+        var canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        return canvas;        
+    }
+
+    function createImageData(width, height) {            
+        var canvas = createCanvas(width, height);        
+        var c = canvas.getContext("2d");            
+        return c.createImageData(width, height);
+    }
+
+    //-------------------------------------------------------------------------
+    // API Functions
+    //-------------------------------------------------------------------------
+    function load(filename) {
+        return new Promise(function(resolve, reject) {
+            var img = new Image();
+            img.onload = function() {
+                var canvas = createCanvas(img.width, img.height);                
+                var c = canvas.getContext("2d");
+                c.drawImage(img, 0, 0);                
+                resolve(c.getImageData(0, 0, canvas.width, canvas.height));
+            };
+            img.src = filename;
+        });
+    }
+
+
     function gray(img) {
         return eachPixel(img, function(index, pixel) {
-            pixel.setGray(pixel.luminance());
+            pixel.transform(GRAYSCALE_MATRIX);
         });
     }
 
     function sepia(img) {
         return eachPixel(img, function(index, pixel) {
-            pixel.transform([
-                0.393, 0.769, 0.189,
-                0.349, 0.686, 0.168,
-                0.272, 0.534, 0.131]
-            );
+            pixel.transform(SEPIA_MATRIX);
         });
     }
 
