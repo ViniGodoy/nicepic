@@ -170,9 +170,9 @@ var Pixel = (function() {
     };
 
     Pixel.prototype.transform = function(matrix) {
-        var r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2] + matrix[3];
-        var g = this.r() * matrix[4] + this.g() * matrix[5] + this.b() * matrix[6] + matrix[7];
-        var b = this.r() * matrix[8] + this.g() * matrix[9] + this.b() * matrix[10] + matrix[11];
+        var r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
+        var g = this.r() * matrix[3] + this.g() * matrix[4] + this.b() * matrix[5];
+        var b = this.r() * matrix[6] + this.g() * matrix[7] + this.b() * matrix[8];
         return this.set(r, g, b, this.a());
     };
 

@@ -55,23 +55,23 @@ var nicepic = function() {
         });
     }
 
-    function toGray(img) {
+    function gray(img) {
         return eachPixel(img, function(index, pixel) {
             pixel.setGray(pixel.luminance());
         });
     }
 
-    function toSepia(img) {
+    function sepia(img) {
         return eachPixel(img, function(index, pixel) {
             pixel.transform([
-                0.393, 0.769, 0.189, 0,
-                0.349, 0.686, 0.168, 0,
-                0.272, 0.534, 0.131, 0]
+                0.393, 0.769, 0.189,
+                0.349, 0.686, 0.168,
+                0.272, 0.534, 0.131]
             );
         });
     }
 
-    function toBinary(img, threshold) {
+    function binary(img, threshold) {
         var pos = threshold >= 0 ? 255 : 0;
         var neg = threshold >= 0 ? 0 : 255;
         threshold = Math.abs(threshold);
@@ -86,7 +86,7 @@ var nicepic = function() {
         });
     }
 
-    function drawInCanvas(img, canvas, x, y) {
+    function toCanvas(img, canvas, x, y) {
         x = x || 0;
         y = y || 0;
         var c = typeof(canvas) === "string" ?
@@ -99,13 +99,13 @@ var nicepic = function() {
 
     return {
         load: load,
-        toGray : toGray,
-        toSepia : toSepia,
-        toBinary : toBinary,
+        gray : gray,
+        sepia : sepia,
+        binary : binary,
         invert : invert,
-        _toGray : toGray,
-        _toSepia : toSepia,
-        _toBinary : wrap(toBinary),
-        _drawInCanvas : wrap(drawInCanvas)
+        _gray : gray,
+        _sepia : sepia,
+        _binary : wrap(binary),
+        _toCanvas : wrap(toCanvas)
     };
 }();
