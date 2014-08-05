@@ -25,12 +25,13 @@ demonstrate correction filters.
 
 In order to test the samples, I recomment using [Mongoose Server][3] in 
 Windows. If you are a Mac User, just type **python -m SimpleHttpServer 8080**
-in command prompt. In both cases, the server must be started using the samples 
-folder as root directory.
+in command prompt. In both cases, the server must be started using the same
+path of this readme file as root directory (nicepic root).
 
 
 Change History
 --------------
+05/08/2014 - Included Pixel class, eachPixel function and invert and sepia filters.
 04/08/2014 - First commit. Grayscale and threshold filters.
 
 [1]: http://www.google.com/intl/pt-BR/chrome/browser/

@@ -9,10 +9,11 @@
             Canvas de destino
         </canvas>
         
-        <script type="text/javascript">        	
-        	nicepic.load("/img/flowers.png")
-        		.then(nicepic._toGray)
-        		.then(nicepic._drawInCanvas("destino", 0, 0));        	
+        <script type="text/javascript">        
+        	nicepic.load("/img/dog.png")
+                .then(nicepic._toGray)
+        		.then(nicepic._toSepia)
+        		.then(nicepic._drawInCanvas("destino", 0, 0));
         </script>
 
    	</body>
