@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Teste do NicePic</title>
+        <script type="text/javascript" src="/src/nicepic.js"></script>
+    </head>
+    <body>
+    	<canvas id="destino" width="800" height="800">
+            Canvas de destino
+        </canvas>
+        
+        <script type="text/javascript">        	
+        	nicepic.load("/img/orient.png")
+        		.then(nicepic._toGray)
+        		.then(nicepic._drawInCanvas("destino", 0, 0));        	
+        </script>
+
+   	</body>
+</html>	
