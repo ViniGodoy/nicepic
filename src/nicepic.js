@@ -1,7 +1,7 @@
 var nicepic = function() {
     'use strict';
 
-    var GRAYSCALE_MATRIX = [0.21, 0.72, 0.07];
+    var GRAYSCALE_MATRIX = [0.2126, 0.7252, 0.0722];
     var SEPIA_MATRIX = [
         0.393, 0.769, 0.189,
         0.349, 0.686, 0.168,
