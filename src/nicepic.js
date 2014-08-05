@@ -90,7 +90,7 @@ var nicepic = function() {
         });
     }
 
-    function invert(img) {
+    function inverse(img) {
         return eachPixel(img, function(index, pixel) {
             pixel.invert();
         });
@@ -112,9 +112,10 @@ var nicepic = function() {
         gray : gray,
         sepia : sepia,
         binary : binary,
-        invert : invert,
+        invert : inverse,
         _gray : gray,
         _sepia : sepia,
+        _inverse : inverse,
         _binary : wrap(binary),
         _toCanvas : wrap(toCanvas)
     };

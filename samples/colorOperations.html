@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <title>Color operation samples</title>
+        <script type="text/javascript" src="/src/pixel.js"></script>
+        <script type="text/javascript" src="/src/nicepic.js"></script>
+
+        <script type="text/javascript">
+            var image = nicepic.load("/img/dog.png");
+
+            function btnOriginal() {
+                image.then(nicepic._toCanvas("destination", 0, 0));
+            }
+
+            function btnInverse() {
+                image.then(nicepic._inverse)
+                     .then(nicepic._toCanvas("destination", 0, 0));
+            }
+
+            function btnSepia() {
+                image.then(nicepic._sepia)
+                     .then(nicepic._toCanvas("destination", 0, 0));
+            }
+            function btnGray() {
+                image.then(nicepic._gray)
+                     .then(nicepic._toCanvas("destination", 0, 0));
+            }
+            function btnBinary() {
+                image.then(nicepic._binary(110))
+                     .then(nicepic._gray)
+                     .then(nicepic._toCanvas("destination", 0, 0));
+            }
+        </script>
+
+    </head>
+    <body onload="btnOriginal();">
+        <p>
+        <button onclick="btnOriginal()">Original</button>&nbsp;
+        <button onclick="btnInverse()">Inverse</button>&nbsp;
+        <button onclick="btnSepia()">Sepia</button>&nbsp;
+        <button onclick="btnGray()">Grayscale</button>&nbsp;
+        <button onclick="btnBinary()">Binary</button>&nbsp;
+        </p>
+    	<canvas id="destination" width="800" height="800">
+            Destination canvas
+        </canvas>
+   	</body>
+</html>	
