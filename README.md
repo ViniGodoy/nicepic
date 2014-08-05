@@ -31,8 +31,8 @@ path of this readme file as root directory (nicepic root).
 
 Change History
 --------------
-05/08/2014 - Included Pixel class, eachPixel function and invert and sepia filters.
-04/08/2014 - First commit. Grayscale and threshold filters.
+* 05/08/2014 - Included Pixel class, eachPixel function and invert and sepia filters.
+* 04/08/2014 - First commit. Grayscale and threshold filters.
 
 [1]: http://www.google.com/intl/pt-BR/chrome/browser/
 [2]: http://www.html5rocks.com/en/tutorials/es6/promises/?redirect_from_locale=pt
