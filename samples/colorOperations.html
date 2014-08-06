@@ -20,10 +20,17 @@
                 image.then(nicepic._sepia)
                      .then(nicepic._toCanvas("destination", 0, 0));
             }
+
+            function btnPolaroid() {
+                image.then(nicepic._polaroid)
+                     .then(nicepic._toCanvas("destination", 0, 0));
+            }
+
             function btnGray() {
                 image.then(nicepic._gray)
                      .then(nicepic._toCanvas("destination", 0, 0));
             }
+
             function btnBinary() {
                 image.then(nicepic._gray)
                      .then(nicepic._binary(77))
@@ -37,6 +44,7 @@
         <button onclick="btnOriginal()">Original</button>&nbsp;
         <button onclick="btnInverse()">Inverse</button>&nbsp;
         <button onclick="btnSepia()">Sepia</button>&nbsp;
+        <button onclick="btnPolaroid()">Polaroid</button>&nbsp;
         <button onclick="btnGray()">Grayscale</button>&nbsp;
         <button onclick="btnBinary()">Binary</button>&nbsp;
         </p>

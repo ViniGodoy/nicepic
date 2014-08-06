@@ -16,7 +16,7 @@ var Pixel = (function() {
         pixel.data[0] = r * 255;
         pixel.data[1] = g * 255;
         pixel.data[2] = b * 255;
-        pixel.data[3] = a ? a : 255;
+        pixel.data[3] = a ? a * 255 : 255;
         return pixel;
     };
 
@@ -62,12 +62,7 @@ var Pixel = (function() {
         }
 
         //Otherwise, consider the value as other pixel
-        var v = value.clone().normalize();
-        for (i = 0; i < 4; i++) {
-            this.data[i] *= v.data[i];
-        }
-
-        return this;
+        return this.transform(value.clone().normalize().data);
     };
 
     Pixel.prototype.divide = function(value) {
@@ -172,7 +167,14 @@ var Pixel = (function() {
         var a = this.a();
 
         if (matrix.length == 3) {
-            r = g = b = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
+            r = this.r() * matrix[0];
+            g = this.g() * matrix[1];
+            b = this.b() * matrix[2];
+        } else if (matrix.length == 4) {
+            r = this.r() * matrix[0];
+            g = this.g() * matrix[1];
+            b = this.b() * matrix[2];
+            a = this.a() * matrix[3];
         } else if (matrix.length == 9) {
             r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
             g = this.r() * matrix[3] + this.g() * matrix[4] + this.b() * matrix[5];

@@ -1,13 +1,23 @@
 var nicepic = function() {
     'use strict';
 
-    var GRAYSCALE_MATRIX = [0.2126, 0.7252, 0.0722];
+    var GRAYSCALE_MATRIX = [
+        0.2126, 0.7252, 0.0722,
+        0.2126, 0.7252, 0.0722,
+        0.2126, 0.7252, 0.0722
+    ];
+
     var SEPIA_MATRIX = [
         0.393, 0.769, 0.189,
         0.349, 0.686, 0.168,
         0.272, 0.534, 0.131
     ];
 
+    var POLAROID_MATRIX = [
+        1.438, 0.122, 0.016, 0.03,
+        -0.062, 1.378, -0.016, 0.05,
+        -0.062, -0.122, 1.483, -0.02
+    ];
     //-------------------------------------------------------------------------
     // Utility functions
     //-------------------------------------------------------------------------
@@ -81,18 +91,38 @@ var nicepic = function() {
         });
     }
 
+    function polaroid(img) {
+        return eachPixel(img, function(index, pixel) {
+            pixel.transform(POLAROID_MATRIX);
+        });
+    }
+
     function binary(img, threshold) {
         var pos = threshold >= 0 ? 255 : 0;
         var neg = threshold >= 0 ? 0 : 255;
         threshold = Math.abs(threshold);
         return eachPixel(img, function(index, pixel) {
-            pixel.setGray(img.data[index] >= threshold ? pos : neg)
+            pixel.setGray(img.data[index] >= threshold ? pos : neg);
         });
     }
 
     function inverse(img) {
         return eachPixel(img, function(index, pixel) {
             pixel.invert();
+        });
+    }
+
+    function colorTransform(img, matrix) {
+        return eachPixel(img, function(index, pixel) {
+            pixel.transform(matrix);
+        });
+    }
+
+    function brightness(img, amount) {
+        amount += 1;
+        if (amount < 0) amount = 0;
+        return eachPixel(img, function(index, pixel) {
+            pixel.multiply(amount);
         });
     }
 
@@ -111,12 +141,19 @@ var nicepic = function() {
         load: load,
         gray : gray,
         sepia : sepia,
+        polaroid : polaroid,
         binary : binary,
-        invert : inverse,
+        inverse : inverse,
+        colorTransform : colorTransform,
+        brightness : brightness,
+
         _gray : gray,
         _sepia : sepia,
-        _inverse : inverse,
+        _polaroid : polaroid,
         _binary : wrap(binary),
+        _inverse : inverse,
+        _colorTransform : wrap(colorTransform),
+        _brightness : wrap(brightness),
         _toCanvas : wrap(toCanvas)
     };
 }();
