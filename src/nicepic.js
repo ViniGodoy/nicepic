@@ -36,13 +36,20 @@ var nicepic = function() {
         }
     }
 
-    function eachPixel(img, func, ignore) {
+    function coordToIndex(pixels, x, y) {
+        return (x + y * pixels.width) * 4;
+    }
+
+    function eachPixel(img, func, noAlpha) {
         return new Promise(function(resolve, reject) {
             var out = createImageData(img.width, img.height);
-            for (var i = 0; i < img.data.length; i+=4) {
-                var pixel = Pixel.fromImage(i, img);
-                func(i, pixel);
-                pixel.toImage(i, out, ignore);
+            for (var y = 0; y < img.height; y++) {
+                for (var x = 0; x < img.width; x++) {
+                    var i = coordToIndex(img, x, y);
+                    var pixel = Pixel.fromImage(i, img);
+                    func(pixel, i, x, y);
+                    pixel.toImage(i, out, noAlpha);
+                }
             }
 
             resolve(out);
@@ -60,6 +67,45 @@ var nicepic = function() {
         var canvas = createCanvas(width, height);        
         var c = canvas.getContext("2d");            
         return c.createImageData(width, height);
+    }
+
+    function combine(img1, img2, func, px, py, x, y, w, h) {
+        px = px | 0;
+        py = py | 0;
+        x = x | 0;
+        y = y | 0;
+        w = w | img2.width;
+        h = h | img2.height;
+
+        if (px < 0) {
+            x += -px;
+            px = 0;
+        }
+
+        if (py < 0) {
+            y += -py;
+            py = 0;
+        }
+
+        var x2 = Math.min(x + w, img1.width);
+        var y2 = Math.min(y + h, img1.height);
+
+        //Images do not overlap. Nothing to do.
+        if (x2 < 0 || y2 < 0 || px > img1.width || py > img1.height) {
+            return img1;
+        }
+
+        return eachPixel(img1, function(pixel1, index, i, j) {
+            var img2X = i-x;
+            var img2Y = j-y;
+
+            if (img2X >= 0 && img2Y >= 0 && img2X < x2 && img2Y < y2) {
+                var index2 = coordToIndex(img2, img2X, img2Y);
+                var pixel2 = Pixel.fromImage(index2, img2);
+                func(pixel1, pixel2);
+
+            }
+        });
     }
 
     //-------------------------------------------------------------------------
@@ -80,19 +126,19 @@ var nicepic = function() {
 
 
     function gray(img) {
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.transform(GRAYSCALE_MATRIX);
         });
     }
 
     function sepia(img) {
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.transform(SEPIA_MATRIX);
         });
     }
 
     function instantCamera(img) {
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.transform(INSTANT_CAMERA_MATRIX);
         });
     }
@@ -101,19 +147,19 @@ var nicepic = function() {
         var pos = threshold >= 0 ? 255 : 0;
         var neg = threshold >= 0 ? 0 : 255;
         threshold = Math.abs(threshold);
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.setGray(img.data[index] >= threshold ? pos : neg);
         });
     }
 
     function inverse(img) {
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.invert();
         });
     }
 
     function colorTransform(img, matrix) {
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.transform(matrix);
         });
     }
@@ -121,9 +167,23 @@ var nicepic = function() {
     function brightness(img, amount) {
         amount += 1;
         if (amount < 0) amount = 0;
-        return eachPixel(img, function(index, pixel) {
+        return eachPixel(img, function(pixel) {
             pixel.multiply(amount);
         });
+    }
+
+    function add(img1, img2) {
+        return combine(img1, img2, function(pixel1, pixel2) {
+            pixel1.add(pixel2);
+        });
+    }
+
+    function _add(img2) {
+        return function(img) {
+            return img2.then(function(loadedImg2) {
+                return add(img, loadedImg2);
+            });
+        }
     }
 
     function toCanvas(img, canvas, x, y) {
@@ -136,6 +196,7 @@ var nicepic = function() {
         ctx.putImageData(img, x, y);
         return img;
     }
+
 
     return {
         load: load,
@@ -152,6 +213,7 @@ var nicepic = function() {
         _instantCamera : instantCamera,
         _binary : wrap(binary),
         _inverse : inverse,
+        _add : _add,
         _colorTransform : wrap(colorTransform),
         _brightness : wrap(brightness),
         _toCanvas : wrap(toCanvas)
