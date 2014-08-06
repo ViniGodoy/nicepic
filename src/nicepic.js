@@ -13,7 +13,7 @@ var nicepic = function() {
         0.272, 0.534, 0.131
     ];
 
-    var POLAROID_MATRIX = [
+    var INSTANT_CAMERA_MATRIX = [
         1.438, 0.122, 0.016, 0.03,
         -0.062, 1.378, -0.016, 0.05,
         -0.062, -0.122, 1.483, -0.02
@@ -91,9 +91,9 @@ var nicepic = function() {
         });
     }
 
-    function polaroid(img) {
+    function instantCamera(img) {
         return eachPixel(img, function(index, pixel) {
-            pixel.transform(POLAROID_MATRIX);
+            pixel.transform(INSTANT_CAMERA_MATRIX);
         });
     }
 
@@ -141,7 +141,7 @@ var nicepic = function() {
         load: load,
         gray : gray,
         sepia : sepia,
-        polaroid : polaroid,
+        instantCamera : instantCamera,
         binary : binary,
         inverse : inverse,
         colorTransform : colorTransform,
@@ -149,7 +149,7 @@ var nicepic = function() {
 
         _gray : gray,
         _sepia : sepia,
-        _polaroid : polaroid,
+        _instantCamera : instantCamera,
         _binary : wrap(binary),
         _inverse : inverse,
         _colorTransform : wrap(colorTransform),

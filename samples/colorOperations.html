@@ -21,8 +21,8 @@
                      .then(nicepic._toCanvas("destination", 0, 0));
             }
 
-            function btnPolaroid() {
-                image.then(nicepic._polaroid)
+            function btnInstantCamera() {
+                image.then(nicepic._instantCamera)
                      .then(nicepic._toCanvas("destination", 0, 0));
             }
 
@@ -44,7 +44,7 @@
         <button onclick="btnOriginal()">Original</button>&nbsp;
         <button onclick="btnInverse()">Inverse</button>&nbsp;
         <button onclick="btnSepia()">Sepia</button>&nbsp;
-        <button onclick="btnPolaroid()">Polaroid</button>&nbsp;
+        <button onclick="btnInstantCamera()">Instant Camera</button>&nbsp;
         <button onclick="btnGray()">Grayscale</button>&nbsp;
         <button onclick="btnBinary()">Binary</button>&nbsp;
         </p>

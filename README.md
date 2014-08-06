@@ -38,7 +38,7 @@ to contribute to the official release. Your help will be appreciated.
 
 Change History
 --------------
-* 06/08/2014 - Added brightness, polaroid and color transform functions.
+* 06/08/2014 - Added brightness, instant camera and color transform effects.
 * 05/08/2014 - Included Pixel class, eachPixel function and invert and sepia filters.
 * 04/08/2014 - First commit. Grayscale and threshold filters.
 
