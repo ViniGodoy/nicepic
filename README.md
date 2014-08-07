@@ -38,6 +38,7 @@ to contribute to the official release. Your help will be appreciated.
 
 Change History
 --------------
+* 07/08/2014 - Added add, subtract, blend and multiply operations; blur, sharpen and emboss convolution filters and Laplace, Sobel and Prewitt edge detectors.
 * 06/08/2014 - Added brightness, instant camera and color transform effects.
 * 05/08/2014 - Included Pixel class, eachPixel function and invert and sepia filters.
 * 04/08/2014 - First commit. Grayscale and threshold filters.

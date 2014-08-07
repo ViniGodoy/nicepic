@@ -1,22 +1,29 @@
 var Pixel = (function() {
     'use strict';
 
+    var RGB_CHANNELS = 3;
     var CHANNELS = 4;
+
+    var R = 0;
+    var G = 1;
+    var B = 2;
+    var A = 3;
+
 
     function Pixel() {
         this.data = [];
-        this.data[0] = arguments.length >= 1 ? arguments[0] : 0;
-        this.data[1] = arguments.length >= 2 ? arguments[1] : 0;
-        this.data[2] = arguments.length >= 3 ? arguments[2] : 0;
-        this.data[3] = arguments.length >= 4 ? arguments[3] : 255;
+        this.data[R] = arguments.length >= 1 ? arguments[R] : 0;
+        this.data[G] = arguments.length >= 2 ? arguments[G] : 0;
+        this.data[B] = arguments.length >= 3 ? arguments[B] : 0;
+        this.data[A] = arguments.length >= 4 ? arguments[A] : 255;
     }
 
     Pixel.fromFloats = function(r, g, b, a) {
         var pixel = new Pixel();
-        pixel.data[0] = r * 255;
-        pixel.data[1] = g * 255;
-        pixel.data[2] = b * 255;
-        pixel.data[3] = a ? a * 255 : 255;
+        pixel.data[R] = r * 255;
+        pixel.data[G] = g * 255;
+        pixel.data[B] = b * 255;
+        pixel.data[A] = a ? a * 255 : 255;
         return pixel;
     };
 
@@ -29,23 +36,23 @@ var Pixel = (function() {
         );
     };
 
+    Pixel.distance = function(p1, p2) {
+        return p1.clone().subtract(p2).size();
+    };
+
     Pixel.prototype.clone = function() {
-        var copy = new Pixel();
-        for (var i = 0; i < CHANNELS; i++) {
-            copy.data[i] = this.data[i];
-        }
-        return copy;
+        return new Pixel(this.data[R], this.data[G], this.data[B], this.data[A]);
     };
 
     Pixel.prototype.add = function(pixel) {
-        for (var i = 0; i < CHANNELS; i++) {
+        for (var i = 0; i < RGB_CHANNELS; i++) {
             this.data[i] += pixel.data[i];
         }
         return this;
     };
 
     Pixel.prototype.subtract = function(pixel) {
-        for (var i = 0; i < CHANNELS; i++) {
+        for (var i = 0; i < RGB_CHANNELS; i++) {
             this.data[i] -= pixel.data[i];
         }
         return this;
@@ -55,28 +62,28 @@ var Pixel = (function() {
         //If the value is a number, all pixels gets
         // multiplied by this number
         if (typeof(value) === 'number') {
-            for (var i = 0; i < CHANNELS; i++) {
+            for (var i = 0; i < RGB_CHANNELS; i++) {
                 this.data[i] *= value;
             }
             return this;
         }
 
         //Otherwise, consider the value as other pixel
-        return this.transform(value.clone().normalize().data);
+        return this.transform(value.clone().normalize().data.slice(0,-1));
     };
 
     Pixel.prototype.divide = function(value) {
         //If the value is a number, all pixels gets
         // multiplied by this number
         if (typeof(value) === 'number') {
-            for (var i = 0; i < CHANNELS; i++) {
+            for (var i = 0; i < RGB_CHANNELS; i++) {
                 this.data[i] /= value;
             }
             return this;
         }
 
         //Otherwise, consider the value as other pixel
-        for (i = 0; i < CHANNELS; i++) {
+        for (i = 0; i < RGB_CHANNELS; i++) {
             this.data[i] /= value.data[i];
         }
 
@@ -85,7 +92,7 @@ var Pixel = (function() {
 
     Pixel.prototype.sizeSqr = function() {
         var sum = 0;
-        for (var i = 0; i < CHANNELS; i++) {
+        for (var i = 0; i < RGB_CHANNELS; i++) {
             sum += this.data[i] * this.data[i];
         }
         return sum;
@@ -103,38 +110,46 @@ var Pixel = (function() {
         return this;
     };
 
-    Pixel.prototype.toImage = function(index, img, noAlpha) {
-        var ignore = noAlpha || true;
-
-        for (var i = 0; i < CHANNELS; i++) {
+    Pixel.prototype.toImage = function(index, img) {
+        for (var i = 0; i < RGB_CHANNELS; i++) {
             img.data[index] = this.data[0];
             img.data[index+1] = this.data[1];
             img.data[index+2] = this.data[2];
-            img.data[index+3] = ignore ? 255 : this.data[3];
+            img.data[index+3] = this.data[3];
         }
     };
 
     Pixel.prototype.setFloats = function(r, g, b, a) {
-        this.setRGBA(r*255, g*255, b*255, a*255);
+        this.data[R] = r * 255;
+        this.data[G] = g * 255;
+        this.data[B] = b * 255;
+
+        if (typeof(a) === "number") {
+            this.data[A] = a * 255;
+        }
+        return this;
     };
 
     Pixel.prototype.set = function(r, g, b, a) {
-        this.data[0] = r;
-        this.data[1] = g;
-        this.data[2] = b;
-        this.data[3] = a;
+        this.data[R] = r;
+        this.data[G] = g;
+        this.data[B] = b;
+
+        if (typeof(a) === "number") {
+            this.data[A] = a;
+        }
         return this;
     };
 
     Pixel.prototype.setGray = function(tone) {
-        this.data[0] = tone;
-        this.data[1] = tone;
-        this.data[2] = tone;
+        this.data[R] = tone;
+        this.data[G] = tone;
+        this.data[B] = tone;
         return this;
     };
 
     Pixel.prototype.invert = function() {
-        for (var i = 0; i < CHANNELS; i++) {
+        for (var i = 0; i < RGB_CHANNELS; i++) {
             this.data[i] = 255 - this.data[i];
         }
         return this;
@@ -145,19 +160,23 @@ var Pixel = (function() {
     };
 
     Pixel.prototype.r = function() {
-        return this.data[0];
+        return this.data[R];
     };
 
     Pixel.prototype.g = function() {
-        return this.data[1];
+        return this.data[G];
     };
 
     Pixel.prototype.b = function() {
-        return this.data[2];
+        return this.data[B];
     };
 
     Pixel.prototype.a = function() {
-        return this.data[3];
+        return this.data[A];
+    };
+
+    Pixel.prototype.l = function() {
+        return this.data[R] * 0.2126 + this.data[G] * 0.7252 + this.data[B] * 0.0722;
     };
 
     Pixel.prototype.transform = function(matrix) {
@@ -190,6 +209,15 @@ var Pixel = (function() {
             a = this.r() * matrix[15] + this.g() * matrix[16] + this.b() * matrix[17] + this.a() * matrix[18] + 255 * matrix[19];
         }
         return this.set(r, g, b, a);
+    };
+
+    Pixel.prototype.blend = function(other, v) {
+        v = typeof(v) != "number" ? other.a() : v;
+        v = v > 1 ? 1 : (v < 0 ? 0 : v);
+        for (var i = 0; i < RGB_CHANNELS; i++) {
+            this.data[i] = (1-v) * this.data[i] + v * other.data[i];
+        }
+        return this;
     };
 
     return Pixel;

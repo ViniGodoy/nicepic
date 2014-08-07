@@ -18,6 +18,57 @@ var nicepic = function() {
         -0.062, 1.378, -0.016, 0.05,
         -0.062, -0.122, 1.483, -0.02
     ];
+
+    var BLUR_KERNEL = [
+            1/9, 1/9, 1/9,
+            1/9, 1/9, 1/9,
+            1/9, 1/9, 1/9
+    ];
+
+    var SHARPEN_KERNEL = [
+        0, -1, 0,
+        -1, 5, -1,
+        0, -1, 0
+    ];
+
+    var EMBOSS_KERNEL = [
+        -4, 0, 0,
+         0, 0, 0,
+         0, 0, 4
+    ];
+
+    var LAPLACE_KERNEL = [
+        -0.5, -1, -0.5,
+        -1,  6,   -1,
+        -0.5, -1, -0.5
+    ];
+
+    var SOBEL_X = [
+        -1, -2, -1,
+         0,  0,  0,
+        +1, +2, +1
+    ];
+
+    var SOBEL_Y = [
+        -1, 0, +1,
+        -2, 0, +2,
+        -1, 0, +1
+    ];
+
+    var PREWITT_X = [
+        -1, -1, -1,
+         0,  0, 0,
+        +1, +1, +1
+    ];
+
+    var PREWITT_Y = [
+        -1, 0, +1,
+        -1, 0, +1,
+        -1, 0, +1
+    ];
+
+
+
     //-------------------------------------------------------------------------
     // Utility functions
     //-------------------------------------------------------------------------
@@ -36,19 +87,39 @@ var nicepic = function() {
         }
     }
 
+    function wrap2(func) {
+        var _this = this;
+        return function wrapper() {
+            var args = [];
+            for (var i = 1; i < arguments.length; i++) {
+                args[i+1] = arguments[i];
+            }
+
+            var img2 = arguments[0];
+            return function(img) {
+                var im2 = Promise.resolve(img2);
+                return im2.then(function(loadedImg2) {
+                    args[0] = img;
+                    args[1] = loadedImg2;
+                    return func.apply(_this, args);
+                });
+            }
+        }
+    }
+
     function coordToIndex(pixels, x, y) {
         return (x + y * pixels.width) * 4;
     }
 
-    function eachPixel(img, func, noAlpha) {
-        return new Promise(function(resolve, reject) {
+    function eachPixel(img, func) {
+        return new Promise(function(resolve) {
             var out = createImageData(img.width, img.height);
             for (var y = 0; y < img.height; y++) {
                 for (var x = 0; x < img.width; x++) {
                     var i = coordToIndex(img, x, y);
                     var pixel = Pixel.fromImage(i, img);
                     func(pixel, i, x, y);
-                    pixel.toImage(i, out, noAlpha);
+                    pixel.toImage(i, out);
                 }
             }
 
@@ -69,13 +140,47 @@ var nicepic = function() {
         return c.createImageData(width, height);
     }
 
-    function combine(img1, img2, func, px, py, x, y, w, h) {
-        px = px | 0;
-        py = py | 0;
-        x = x | 0;
-        y = y | 0;
-        w = w | img2.width;
-        h = h | img2.height;
+    function get(tbl, key, def) {
+        return tbl == undefined || tbl == null ? def :
+            (tbl[key] == undefined || tbl[key] ==  null ? def : tbl[key]);
+    }
+
+    function combine(img1, img2, func, opts) {
+        var px = get(opts, "px", 0);
+        var py = get(opts, "py", 0);
+        var x = get(opts, "x", 0);
+        var y = get(opts, "y", 0);
+        var w = get(opts, "w", img2.width);
+        var h = get(opts, "h", img2.height);
+
+        if (w < 0) {
+            w = img2.width + w;
+        }
+
+        if (h < 0) {
+            h = img2.height + h;
+        }
+
+        if (get(opts, "p", undefined) == "center") {
+            px = "center";
+            py = "center";
+        }
+
+        if (px === "center") {
+            px = (img1.width - w) / 2;
+        } else if (px === "right") {
+            px = img1.width - w;
+        } else if (px === "left") {
+            px = 0;
+        }
+
+        if (py === "center") {
+            py = (img1.height - h) / 2;
+        } else if (py === "bottom") {
+            py = img1.height - h;
+        } else if (py === "top") {
+            py = 0;
+        }
 
         if (px < 0) {
             x += -px;
@@ -87,32 +192,79 @@ var nicepic = function() {
             py = 0;
         }
 
-        var x2 = Math.min(x + w, img1.width);
-        var y2 = Math.min(y + h, img1.height);
+        var px2 = px + w;
+        var py2 = py + h;
 
         //Images do not overlap. Nothing to do.
-        if (x2 < 0 || y2 < 0 || px > img1.width || py > img1.height) {
+        if (px2 < 0 || py2 < 0 || px > img1.width || py > img1.height) {
             return img1;
         }
 
         return eachPixel(img1, function(pixel1, index, i, j) {
-            var img2X = i-x;
-            var img2Y = j-y;
+            //Is inside coordinates?
+            if (i >= px && j >= py && i < px2 && j < py2) {
+                var img2X = (i-px)+x;
+                var img2Y = (j-py)+y;
 
-            if (img2X >= 0 && img2Y >= 0 && img2X < x2 && img2Y < y2) {
-                var index2 = coordToIndex(img2, img2X, img2Y);
-                var pixel2 = Pixel.fromImage(index2, img2);
-                func(pixel1, pixel2);
-
+                if (img2X < img2.width && img2Y < img2.height) {
+                    var index2 = coordToIndex(img2, img2X, img2Y);
+                    var pixel2 = Pixel.fromImage(index2, img2);
+                    func(pixel1, pixel2);
+                }
             }
         });
+    }
+
+    function clamp(value, min, max) {
+        return value < min ? min : (value > max ? max : value);
+    }
+
+    function convolve(img, kernel, bias) {
+        bias = bias || 0;
+        var kSize = Math.floor(Math.sqrt(kernel.length));
+        var khSize = Math.floor(kSize / 2);
+
+        return eachPixel(img, function(pixel, index, x, y) {
+            if (pixel.a() == 0)
+                return;
+
+            var sum = new Pixel();
+            for (var j = 0; j < kSize; j++) {
+                for (var i = 0; i < kSize; i++) {
+                    var px = clamp(x + i - khSize, 0, img.width);
+                    var py = clamp(y + j - khSize, 0, img.height);
+                    var pix = Pixel.fromImage(coordToIndex(img, px, py), img);
+                    sum.add(pix.multiply(kernel[i+j*kSize]));
+                }
+            }
+
+            pixel.set(sum.r() + bias, sum.g() + bias, sum.b() + bias);
+        });
+    }
+
+    function edgeDetect(img, kernelX, kernelY) {
+        var gradientX = convolve(img, kernelX);
+        var gradientY = convolve(img, kernelY);
+
+        return Promise
+                 .all([gradientX, gradientY])
+                 .then(function(gradients)
+            {
+                return combine(gradients[0], gradients[1], function(pixel1, pixel2)
+                {
+                    var r = Math.sqrt(pixel1.r() * pixel1.r() + pixel2.r() * pixel2.r());
+                    var g = Math.sqrt(pixel1.g() * pixel1.g() + pixel2.g() * pixel2.g());
+                    var b = Math.sqrt(pixel1.b() * pixel1.b() + pixel2.b() * pixel2.b());
+                    pixel1.set(r, g, b);
+                });
+            });
     }
 
     //-------------------------------------------------------------------------
     // API Functions
     //-------------------------------------------------------------------------
     function load(filename) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
             var img = new Image();
             img.onload = function() {
                 var canvas = createCanvas(img.width, img.height);                
@@ -147,7 +299,7 @@ var nicepic = function() {
         var pos = threshold >= 0 ? 255 : 0;
         var neg = threshold >= 0 ? 0 : 255;
         threshold = Math.abs(threshold);
-        return eachPixel(img, function(pixel) {
+        return eachPixel(img, function(pixel, index) {
             pixel.setGray(img.data[index] >= threshold ? pos : neg);
         });
     }
@@ -172,18 +324,58 @@ var nicepic = function() {
         });
     }
 
-    function add(img1, img2) {
+    function add(img1, img2, opts) {
         return combine(img1, img2, function(pixel1, pixel2) {
             pixel1.add(pixel2);
-        });
+        }, opts);
     }
 
-    function _add(img2) {
-        return function(img) {
-            return img2.then(function(loadedImg2) {
-                return add(img, loadedImg2);
-            });
-        }
+    function subtract(img1, img2, opts) {
+        return combine(img1, img2, function(pixel1, pixel2) {
+            pixel1.subtract(pixel2);
+        }, opts);
+    }
+
+    function blend(img1, img2, alpha, opts) {
+        return combine(img1, img2, function(pixel1, pixel2) {
+            pixel1.blend(pixel2, alpha);
+        }, opts);
+    }
+
+    function multiply(img1, img2, opts) {
+        return combine(img1, img2, function(pixel1, pixel2) {
+            pixel1.multiply(pixel2);
+        }, opts);
+    }
+
+    function maskAlpha(img1, mask, opts) {
+        return combine(img1, mask, function(pixel1, pixel2) {
+            pixel1.data[3] = pixel2.l();
+        }, opts);
+    }
+
+    function blur(img) {
+        return convolve(img, BLUR_KERNEL);
+    }
+
+    function sharpen(img) {
+        return convolve(img, SHARPEN_KERNEL);
+    }
+
+    function emboss(img) {
+        return convolve(img, EMBOSS_KERNEL, 125);
+    }
+
+    function laplace(img) {
+        return convolve(img, LAPLACE_KERNEL);
+    }
+
+    function sobel(img) {
+        return edgeDetect(img, SOBEL_X, SOBEL_Y);
+    }
+
+    function prewitt(img) {
+        return edgeDetect(img, PREWITT_X, PREWITT_Y);
     }
 
     function toCanvas(img, canvas, x, y) {
@@ -200,6 +392,8 @@ var nicepic = function() {
 
     return {
         load: load,
+
+        //Unitary functions
         gray : gray,
         sepia : sepia,
         instantCamera : instantCamera,
@@ -207,15 +401,42 @@ var nicepic = function() {
         inverse : inverse,
         colorTransform : colorTransform,
         brightness : brightness,
+        convolve : convolve,
+        blur : blur,
+        sharpen : sharpen,
+        emboss : emboss,
+        laplace : laplace,
+        sobel : sobel,
+        prewitt : prewitt,
 
         _gray : gray,
         _sepia : sepia,
         _instantCamera : instantCamera,
         _binary : wrap(binary),
         _inverse : inverse,
-        _add : _add,
         _colorTransform : wrap(colorTransform),
         _brightness : wrap(brightness),
-        _toCanvas : wrap(toCanvas)
+        _convolve : wrap(convolve),
+        _blur : blur,
+        _sharpen : sharpen,
+        _emboss : emboss,
+        _laplace : laplace,
+        _sobel : sobel,
+        _prewitt : prewitt,
+        _toCanvas : wrap(toCanvas),
+
+        //Binary functions
+        add : add,
+        subtract : subtract,
+        multiply : multiply,
+        blend : blend,
+        maskAlpha : maskAlpha,
+
+        _add : wrap2(add),
+        _subtract : wrap2(subtract),
+        _multiply : wrap2(multiply),
+        _blend : wrap2(blend),
+        _maskAlpha : wrap2(maskAlpha)
+
     };
 }();

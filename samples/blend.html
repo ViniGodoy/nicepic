@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <title>Blending images</title>
+        <script type="text/javascript" src="/src/pixel.js"></script>
+        <script type="text/javascript" src="/src/nicepic.js"></script>
+
+        <script type="text/javascript">
+            var img1 = nicepic.load("/img/flower.png");
+            var img2 = nicepic.load("/img/solitary.png");
+
+            function mix(percent) {
+                img1.then(nicepic._blend(img2, percent, {
+                    // Point in img1 where to place img2
+
+                    // For automatic centering, an optional syntax is:
+                    // px: "center", py: "center" in this case
+
+                    // For centering in both axis, there's a simpler sintax:
+                    // p: "center"
+                    px: 10, py: 10,
+
+                    // Clipping coordinates in img2.
+                    // Negative w and h sizes will be deduced from img2
+                    // real width and height.
+                    x:10, y:10, w:-20, h:-20
+                })).then(nicepic._toCanvas("destination"));
+
+            }
+        </script>
+
+    </head>
+    <body onload="mix(0);">
+        <p>
+        <button onclick="mix(0)">0%</button>&nbsp;
+        <button onclick="mix(0.2)">20%</button>&nbsp;
+        <button onclick="mix(0.4)">40%</button>&nbsp;
+        <button onclick="mix(0.6)">60%</button>&nbsp;
+        <button onclick="mix(0.8)">80%</button>&nbsp;
+        <button onclick="mix(1)">100%</button>&nbsp;
+        </p>
+    	<canvas id="destination" width="800" height="800">
+            Destination canvas
+        </canvas>
+   	</body>
+</html>	

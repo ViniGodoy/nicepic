@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>Convolution filters</title>
+        <script type="text/javascript" src="/src/pixel.js"></script>
+        <script type="text/javascript" src="/src/nicepic.js"></script>
+
+        <script type="text/javascript">
+            var image = nicepic.load("/img/orient.png");
+
+            function btnOriginal() {
+                image.then(nicepic._toCanvas("destination"));
+            }
+
+            function btnBlur() {
+                image.then(nicepic._blur)
+                     .then(nicepic._toCanvas("destination"));
+            }
+
+            function btnSharpen() {
+                image.then(nicepic._sharpen)
+                     .then(nicepic._toCanvas("destination"));
+            }
+            function btnEmboss() {
+                image.then(nicepic._emboss)
+                     .then(nicepic._sepia)
+                     .then(nicepic._toCanvas("destination"));
+            }
+
+            function btnLaplace() {
+                image.then(nicepic._laplace)
+                     .then(nicepic._toCanvas("destination"));
+            }
+            function btnPrewitt() {
+                image.then(nicepic._prewitt)
+                     .then(nicepic._toCanvas("destination"));
+            }
+            function btnSobel() {
+                image.then(nicepic._sobel)
+                     .then(nicepic._toCanvas("destination"));
+            }
+
+        </script>
+
+    </head>
+    <body onload="btnOriginal();">
+        <p>
+        <button onclick="btnOriginal()">Original</button>&nbsp;
+        <button onclick="btnBlur()">Blur</button>&nbsp;
+        <button onclick="btnSharpen()">Sharpen</button>&nbsp;
+        <button onclick="btnEmboss()">Emboss</button>&nbsp;
+        <button onclick="btnLaplace()">Edges (Laplace)</button>&nbsp;
+        <button onclick="btnPrewitt()">Edges (Prewitt)</button>&nbsp;
+        <button onclick="btnSobel()">Edges (Sobel)</button>&nbsp;
+        </p>
+    	<canvas id="destination" width="800" height="800">
+            Destination canvas
+        </canvas>
+   	</body>
+</html>	

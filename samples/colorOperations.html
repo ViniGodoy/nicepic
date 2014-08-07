@@ -8,33 +8,33 @@
             var image = nicepic.load("/img/dog.png");
 
             function btnOriginal() {
-                image.then(nicepic._toCanvas("destination", 0, 0));
+                image.then(nicepic._toCanvas("destination"));
             }
 
             function btnInverse() {
                 image.then(nicepic._inverse)
-                     .then(nicepic._toCanvas("destination", 0, 0));
+                     .then(nicepic._toCanvas("destination"));
             }
 
             function btnSepia() {
                 image.then(nicepic._sepia)
-                     .then(nicepic._toCanvas("destination", 0, 0));
+                     .then(nicepic._toCanvas("destination"));
             }
 
             function btnInstantCamera() {
                 image.then(nicepic._instantCamera)
-                     .then(nicepic._toCanvas("destination", 0, 0));
+                     .then(nicepic._toCanvas("destination"));
             }
 
             function btnGray() {
                 image.then(nicepic._gray)
-                     .then(nicepic._toCanvas("destination", 0, 0));
+                     .then(nicepic._toCanvas("destination"));
             }
 
             function btnBinary() {
                 image.then(nicepic._gray)
                      .then(nicepic._binary(77))
-                     .then(nicepic._toCanvas("destination", 0, 0));
+                     .then(nicepic._toCanvas("destination"));
             }
         </script>
 
