@@ -184,6 +184,28 @@ var nicepic = function() {
             (tbl[key] == undefined || tbl[key] ==  null ? def : tbl[key]);
     }
 
+    function adjustX(x, dst, src) {
+        if (typeof(x) === "number")
+            return Math.round(x);
+        if (x === "center")
+            return (dst.width - src.width) / 2;
+        if (x === "left")
+            return dst.width - src.width;
+
+        return 0;
+    }
+
+    function adjustY(y, dst, src) {
+        if (typeof(y) === "number")
+            return Math.round(y);
+        if (y === "center")
+            return (dst.height - src.height) / 2;
+        if (y === "bottom")
+            return dstSize.height - src.height;
+
+        return 0;
+    }
+
     function combine(img1, img2, func, opts) {
         var px = get(opts, "px", 0);
         var py = get(opts, "py", 0);
@@ -205,21 +227,8 @@ var nicepic = function() {
             py = "center";
         }
 
-        if (px === "center") {
-            px = (img1.width - w) / 2;
-        } else if (px === "right") {
-            px = img1.width - w;
-        } else if (px === "left") {
-            px = 0;
-        }
-
-        if (py === "center") {
-            py = (img1.height - h) / 2;
-        } else if (py === "bottom") {
-            py = img1.height - h;
-        } else if (py === "top") {
-            py = 0;
-        }
+        px = adjustX(px, img1, img2);
+        py = adjustY(py, img1, img2);
 
         if (px < 0) {
             x += -px;
@@ -418,10 +427,11 @@ var nicepic = function() {
     }
 
     function toCanvas(img, canvas, x, y) {
-        x = x || 0;
-        y = y || 0;
         var c = typeof(canvas) === "string" ?
             document.getElementById(canvas) : canvas;
+
+        x = adjustX(x, canvas, img);
+        y = adjustY(y, canvas, img);
 
         var ctx = c.getContext("2d");
         ctx.putImageData(img, x, y);
