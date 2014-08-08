@@ -8,7 +8,7 @@
             var image = nicepic.load("/img/orient.png");
 
             function btnOriginal() {
-                image.then(nicepic._toCanvas("destination"));
+                image.then(nicepic._toCanvas("destination", 0, 0, true));
             }
 
             function btnBlur() {
@@ -20,6 +20,7 @@
                 image.then(nicepic._sharpen)
                      .then(nicepic._toCanvas("destination"));
             }
+
             function btnEmboss() {
                 image.then(nicepic._emboss)
                      .then(nicepic._sepia)
@@ -39,6 +40,13 @@
                      .then(nicepic._toCanvas("destination"));
             }
 
+            function onFileChange(files) {
+                nicepic.load(files[0])
+                    .then(function(img) {
+                        image = Promise.resolve(img);
+                        btnOriginal();
+                    }).catch(function(err) { alert(err); });
+            }
         </script>
 
     </head>
@@ -52,6 +60,7 @@
         <button onclick="btnPrewitt()">Edges (Prewitt)</button>&nbsp;
         <button onclick="btnSobel()">Edges (Sobel)</button>&nbsp;
         </p>
+        <p>Or <input type="file" id="fileInput" size="60" onchange="onFileChange(this.files)" /></p>
     	<canvas id="destination" width="800" height="800">
             Destination canvas
         </canvas>

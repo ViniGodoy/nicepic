@@ -8,7 +8,8 @@
             var image = nicepic.load("/img/dog.png");
 
             function btnOriginal() {
-                image.then(nicepic._toCanvas("destination"));
+                image.then(nicepic._toCanvas("destination", 0, 0, true))
+                     .catch(function(err) { alert(err); });
             }
 
             function btnInverse() {
@@ -36,6 +37,14 @@
                      .then(nicepic._binary(77))
                      .then(nicepic._toCanvas("destination"));
             }
+
+            function onFileChange(files) {
+                nicepic.load(files[0])
+                        .then(function(img) {
+                            image = Promise.resolve(img);
+                            btnOriginal();
+                        }).catch(function(err) { alert(err); });
+            }
         </script>
 
     </head>
@@ -48,6 +57,7 @@
         <button onclick="btnGray()">Grayscale</button>&nbsp;
         <button onclick="btnBinary()">Binary</button>&nbsp;
         </p>
+        <p>Or <input type="file" id="fileInput" size="60" onchange="onFileChange(this.files)" /></p>
     	<canvas id="destination" width="800" height="800">
             Destination canvas
         </canvas>

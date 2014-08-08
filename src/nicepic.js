@@ -67,7 +67,7 @@ var nicepic = function() {
         -1, 0, +1
     ];
 
-    var cpuPower = 40000;
+    var cpuPower = 20000;
 
     //-------------------------------------------------------------------------
     // Utility functions
@@ -311,16 +311,48 @@ var nicepic = function() {
     //-------------------------------------------------------------------------
     // API Functions
     //-------------------------------------------------------------------------
-    function load(filename) {
+    function read(img) {
+        var canvas = createCanvas(img.width, img.height);
+        var c = canvas.getContext("2d");
+        c.drawImage(img, 0, 0);
+        return c.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function loadFromInput(file) {
+        return new Promise(function(resolve, reject) {
+            var fr = new FileReader();
+            if (file.type.substring(0, 5) != "image") {
+                reject(new Error("File " + file.name + " has type '" + file.type + "', not an image!"));
+                return;
+            }
+
+            fr.onload = function(e) {
+                resolve(e.target.result);
+            };
+
+            fr.readAsDataURL(file);
+        }).then(function(data) {
+            return new Promise(function(resolve) {
+                var img = new Image();
+                img.onload = function() {
+                    resolve(read(img));
+                };
+                img.src = data;
+            });
+        });
+    }
+
+    function load(file) {
+        if (typeof(file.name) === "string") {
+            return loadFromInput(file);
+        }
+
         return new Promise(function(resolve) {
             var img = new Image();
             img.onload = function() {
-                var canvas = createCanvas(img.width, img.height);                
-                var c = canvas.getContext("2d");
-                c.drawImage(img, 0, 0);                
-                resolve(c.getImageData(0, 0, canvas.width, canvas.height));
+                resolve(read(img));
             };
-            img.src = filename;
+            img.src = file;
         });
     }
 
@@ -426,7 +458,7 @@ var nicepic = function() {
         return edgeDetect(img, PREWITT_X, PREWITT_Y);
     }
 
-    function toCanvas(img, canvas, x, y) {
+    function toCanvas(img, canvas, x, y, clear) {
         var c = typeof(canvas) === "string" ?
             document.getElementById(canvas) : canvas;
 
@@ -434,6 +466,9 @@ var nicepic = function() {
         y = adjustY(y, canvas, img);
 
         var ctx = c.getContext("2d");
+
+        if (clear) ctx.clearRect(0, 0, c.width, c.height);
+
         ctx.putImageData(img, x, y);
         return img;
     }
