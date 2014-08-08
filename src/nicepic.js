@@ -72,6 +72,26 @@ var nicepic = function() {
     //-------------------------------------------------------------------------
     // Utility functions
     //-------------------------------------------------------------------------
+    function getCpuPower() {
+        return cpuPower;
+    }
+
+    function getPowerFor(img) {
+        var pixels = img.width * img.height;
+
+        if (cpuPower > 1) {
+            return Math.min(cpuPower, pixels);
+        }
+
+        return cpuPower == 0 ? pixels : pixels * cpuPower;
+    }
+
+    function setCpuPower(power) {
+        if (power > 1) power = Math.round(power);
+        if (power <= 0) power = 0;
+        cpuPower = power;
+    }
+
     function wrap(func) {
         var _this = this;
         return function wrapper() {
@@ -119,31 +139,8 @@ var nicepic = function() {
         });
     }
 
-    function getCpuPower() {
-        return cpuPower;
-    }
-
-    function getPowerFor(img) {
-        var pixels = img.width * img.height;
-
-        if (cpuPower > 1) {
-            return Math.min(cpuPower, pixels);
-        }
-
-        if (cpuPower > 0 && cpuPower < 1) {
-            return pixels * cpuPower;
-        }
-
-        return pixels;
-    }
-
-    function setCpuPower(power) {
-        if (power > 1) power = Math.round(power);
-        cpuPower = power;
-    }
-
     function eachPixel(img, func) {
-        var linePromises = [];
+        var chunkPromises = [];
         var out = createImageData(img.width, img.height);
         var size = getPowerFor(img)*4;
         var step = Math.ceil(img.data.length / size);
@@ -152,7 +149,7 @@ var nicepic = function() {
             var from = s * size;
             var to = Math.min((s+1)*size, img.data.length);
 
-            linePromises[s] = schedule(from, to, function(from, to) {
+            chunkPromises[s] = schedule(from, to, function(from, to) {
                 for (var i = from; i < to; i += 4) {
                     var x = Math.floor(i / 4) % img.width;
                     var y = Math.floor(i / (img.width * 4));
@@ -164,7 +161,7 @@ var nicepic = function() {
             });
         }
 
-        return Promise.all(linePromises).then(function() {
+        return Promise.all(chunkPromises).then(function() {
             return out;
         });
     }
@@ -481,6 +478,5 @@ var nicepic = function() {
         _multiply : wrap2(multiply),
         _blend : wrap2(blend),
         _maskAlpha : wrap2(maskAlpha)
-
     };
 }();
