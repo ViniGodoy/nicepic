@@ -111,19 +111,31 @@ var nicepic = function() {
         return (x + y * pixels.width) * 4;
     }
 
-    function eachPixel(img, func) {
+    function nonBlocking(value, func) {
         return new Promise(function(resolve) {
-            var out = createImageData(img.width, img.height);
-            for (var y = 0; y < img.height; y++) {
+            window.setTimeout(function() {
+                resolve(func(value));
+            }, 1);
+        });
+    }
+
+    function eachPixel(img, func) {
+        var linePromises = [];
+        var out = createImageData(img.width, img.height);
+
+        for (var y = 0; y < img.height; y++) {
+            linePromises[y] = nonBlocking(y, function(y) {
                 for (var x = 0; x < img.width; x++) {
                     var i = coordToIndex(img, x, y);
                     var pixel = Pixel.fromImage(i, img);
                     func(pixel, i, x, y);
                     pixel.toImage(i, out);
                 }
-            }
+            });
+        }
 
-            resolve(out);
+        return Promise.all(linePromises).then(function() {
+            return out;
         });
     }
 
