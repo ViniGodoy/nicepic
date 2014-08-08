@@ -67,7 +67,7 @@ var nicepic = function() {
         -1, 0, +1
     ];
 
-
+    var cpuPower = 40000;
 
     //-------------------------------------------------------------------------
     // Utility functions
@@ -111,22 +111,52 @@ var nicepic = function() {
         return (x + y * pixels.width) * 4;
     }
 
-    function nonBlocking(value, func) {
+    function schedule(from, to, func) {
         return new Promise(function(resolve) {
             window.setTimeout(function() {
-                resolve(func(value));
+                resolve(func(from, to));
             }, 1);
         });
+    }
+
+    function getCpuPower() {
+        return cpuPower;
+    }
+
+    function getPowerFor(img) {
+        var pixels = img.width * img.height;
+
+        if (cpuPower > 1) {
+            return Math.min(cpuPower, pixels);
+        }
+
+        if (cpuPower > 0 && cpuPower < 1) {
+            return pixels * cpuPower;
+        }
+
+        return pixels;
+    }
+
+    function setCpuPower(power) {
+        if (power > 1) power = Math.round(power);
+        cpuPower = power;
     }
 
     function eachPixel(img, func) {
         var linePromises = [];
         var out = createImageData(img.width, img.height);
+        var size = getPowerFor(img)*4;
+        var step = Math.ceil(img.data.length / size);
 
-        for (var y = 0; y < img.height; y++) {
-            linePromises[y] = nonBlocking(y, function(y) {
-                for (var x = 0; x < img.width; x++) {
-                    var i = coordToIndex(img, x, y);
+        for (var s = 0; s < step; s++) {
+            var from = s * size;
+            var to = Math.min((s+1)*size, img.data.length);
+
+            linePromises[s] = schedule(from, to, function(from, to) {
+                for (var i = from; i < to; i += 4) {
+                    var x = Math.floor(i / 4) % img.width;
+                    var y = Math.floor(i / (img.width * 4));
+
                     var pixel = Pixel.fromImage(i, img);
                     func(pixel, i, x, y);
                     pixel.toImage(i, out);
@@ -404,6 +434,8 @@ var nicepic = function() {
 
     return {
         load: load,
+        cpuPower : getCpuPower,
+        setCpuPower : setCpuPower,
 
         //Unitary functions
         gray : gray,
