@@ -38,6 +38,7 @@ to contribute to the official release. Your help will be appreciated.
 
 Change History
 --------------
+* 09/09/2014 - convolve2 function for separable convolutions. 33% performance boost in blur filter and edge detectors.
 * 08/08/2014 - Does not freeze browse on heavy functions. nicepic.load now supports HTML 5 File.
 * 07/08/2014 - Added add, subtract, blend and multiply operations; blur, sharpen and emboss convolution filters and Laplace, Sobel and Prewitt edge detectors.
 * 06/08/2014 - Added brightness, instant camera and color transform effects.

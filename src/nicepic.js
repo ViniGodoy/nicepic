@@ -19,12 +19,6 @@ var nicepic = function() {
         -0.062, -0.122, 1.483, -0.02
     ];
 
-    var BLUR_KERNEL = [
-            1/9, 1/9, 1/9,
-            1/9, 1/9, 1/9,
-            1/9, 1/9, 1/9
-    ];
-
     var SHARPEN_KERNEL = [
         0, -1, 0,
         -1, 5, -1,
@@ -43,29 +37,20 @@ var nicepic = function() {
         -0.5, -1, -0.5
     ];
 
-    var SOBEL_X = [
-        -1, -2, -1,
-         0,  0,  0,
-        +1, +2, +1
-    ];
+    //Separable kernels
+    var BLUR_KERNEL_VH = [1/4, 2/4, 1/4];
 
-    var SOBEL_Y = [
-        -1, 0, +1,
-        -2, 0, +2,
-        -1, 0, +1
-    ];
+    var SOBEL_XV = [1, 2, 1];
+    var SOBEL_XH = [-1, 0, 1];
 
-    var PREWITT_X = [
-        -1, -1, -1,
-         0,  0, 0,
-        +1, +1, +1
-    ];
+    var SOBEL_YV = [1, 0, -1];
+    var SOBEL_YH = [1, 2, 1];
 
-    var PREWITT_Y = [
-        -1, 0, +1,
-        -1, 0, +1,
-        -1, 0, +1
-    ];
+    var PREWITT_XV = [1, 1, 1];
+    var PREWITT_XH = [-1, 0, 1];
+
+    var PREWITT_YV = [1, 0, -1];
+    var PREWITT_YH = [1, 1, 1];
 
     var cpuPower = 20000;
 
@@ -290,16 +275,49 @@ var nicepic = function() {
         });
     }
 
-    function edgeDetect(img, kernelX, kernelY) {
-        var gradientX = convolve(img, kernelX);
-        var gradientY = convolve(img, kernelY);
+    function convolve2(img, kv, kh, bias) {
+        kh = kh || kv;
+        bias = bias || 0;
 
-        return Promise
-                 .all([gradientX, gradientY])
-                 .then(function(gradients)
-            {
-                return combine(gradients[0], gradients[1], function(pixel1, pixel2)
-                {
+        var kvhSize = Math.floor(kv.length / 2);
+        var khhSize = Math.floor(kh.length / 2);
+        return eachPixel(img, function (pixel, index, x, y) {
+            if (pixel.a() == 0)
+                return;
+
+            var sum = new Pixel();
+            for (var j = 0; j < kv.length; j++) {
+                var py = clamp(y + j - kvhSize, 0, img.height);
+                var pix = Pixel.fromImage(coordToIndex(img, x, py), img);
+                sum.add(pix.multiply(kv[j]));
+            }
+
+            pixel.set(sum.r() + bias, sum.g() + bias, sum.b() + bias);
+        }).then(function(img) {
+            return eachPixel(img, function (pixel, index, x, y) {
+                if (pixel.a() == 0)
+                    return;
+
+                var sum = new Pixel();
+
+                for (var i = 0; i < kh.length; i++) {
+                    var px = clamp(x + i - khhSize, 0, img.width);
+                    var pix = Pixel.fromImage(coordToIndex(img, px, y), img);
+                    sum.add(pix.multiply(kh[i]));
+                }
+
+                pixel.set(sum.r() + bias, sum.g() + bias, sum.b() + bias);
+            });
+        });
+    }
+
+    function edgeDetect(img, kxv, kxh, kyv, kyh) {
+        var gradientX = convolve2(img, kxv, kxh);
+        var gradientY = convolve2(img, kyv, kyh);
+
+        return Promise.all([gradientX, gradientY])
+            .then(function(gradients) {
+                return combine(gradients[0], gradients[1], function(pixel1, pixel2) {
                     var r = Math.sqrt(pixel1.r() * pixel1.r() + pixel2.r() * pixel2.r());
                     var g = Math.sqrt(pixel1.g() * pixel1.g() + pixel2.g() * pixel2.g());
                     var b = Math.sqrt(pixel1.b() * pixel1.b() + pixel2.b() * pixel2.b());
@@ -435,7 +453,7 @@ var nicepic = function() {
     }
 
     function blur(img) {
-        return convolve(img, BLUR_KERNEL);
+        return convolve2(img, BLUR_KERNEL_VH);
     }
 
     function sharpen(img) {
@@ -451,11 +469,11 @@ var nicepic = function() {
     }
 
     function sobel(img) {
-        return edgeDetect(img, SOBEL_X, SOBEL_Y);
+        return edgeDetect(img, SOBEL_XV, SOBEL_XH, SOBEL_YV, SOBEL_YH);
     }
 
     function prewitt(img) {
-        return edgeDetect(img, PREWITT_X, PREWITT_Y);
+        return edgeDetect(img, PREWITT_XV, PREWITT_XH, PREWITT_YV, PREWITT_YH);
     }
 
     function toCanvas(img, canvas, x, y, clear) {
@@ -488,6 +506,7 @@ var nicepic = function() {
         colorTransform : colorTransform,
         brightness : brightness,
         convolve : convolve,
+        convolve2 : convolve2,
         blur : blur,
         sharpen : sharpen,
         emboss : emboss,
@@ -503,6 +522,7 @@ var nicepic = function() {
         _colorTransform : wrap(colorTransform),
         _brightness : wrap(brightness),
         _convolve : wrap(convolve),
+        _convolve2 : wrap(convolve2),
         _blur : blur,
         _sharpen : sharpen,
         _emboss : emboss,
