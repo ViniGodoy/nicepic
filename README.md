@@ -27,9 +27,9 @@ Windows. If you are a Mac User, just type **python -m SimpleHttpServer 8080**
 in command prompt. In both cases, the server must be started using the same
 path of this readme file as root directory (nicepic root).
 
-Licence information
+License information
 -------------------
-This software is provided with GPLv3.0 licence. If you use this software
+This software is provided with GPLv3.0 license. If you use this software
 we ask you the kindness to credit the project name and website.
 
 Also, if you modify this software (adding interesting functionality
