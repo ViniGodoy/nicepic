@@ -54,6 +54,9 @@ var nicepic = function() {
 
     var cpuPower = 20000;
 
+    var mask;
+    var discardMask = false;
+
     //-------------------------------------------------------------------------
     // Utility functions
     //-------------------------------------------------------------------------
@@ -69,6 +72,39 @@ var nicepic = function() {
         }
 
         return cpuPower == 0 ? pixels : pixels * cpuPower;
+    }
+
+    function setMask(img) {
+        //If it's null, clears the mask
+        if (img == undefined || img == null) {
+            mask = null;
+            return;
+        }
+
+        //If it's a promise. Resolves the promise
+        if (img.then != undefined) {
+            img.then(function (img) {
+                setMask(img);
+            });
+            return img;
+        }
+
+        //If it's an image, sets the image
+        if (img.data != undefined) {
+            mask = img;
+            return img;
+        }
+
+        //Otherwise, resets the mask
+        img = null;
+    }
+
+    function getMask() {
+        return mask;
+    }
+
+    function discardOutsideMask() {
+        discardMask = true;
     }
 
     function setCpuPower(power) {
@@ -140,13 +176,19 @@ var nicepic = function() {
                     var y = Math.floor(i / (img.width * 4));
 
                     var pixel = Pixel.fromImage(i, img);
-                    func(pixel, i, x, y);
-                    pixel.toImage(i, out);
+                    if (!(mask && i < mask.data.length && Pixel.fromImage(i, mask).r() == 0))
+                        func(pixel, i, x, y);
+                    else if (discardMask) {
+                        pixel.setGray(0);
+                    }
+
+                        pixel.toImage(i, out);
                 }
             });
         }
 
         return Promise.all(chunkPromises).then(function() {
+            discardMask = false;
             return out;
         });
     }
@@ -326,6 +368,15 @@ var nicepic = function() {
             });
     }
 
+    function newImage(width, height, paint) {
+        return new Promise(function(resolve) {
+            var canvas = createCanvas(width, height);
+            var c = canvas.getContext("2d");
+            paint(c, width, height);
+            resolve(c.getImageData(0,0,width, height));
+        });
+    }
+
     //-------------------------------------------------------------------------
     // API Functions
     //-------------------------------------------------------------------------
@@ -393,12 +444,43 @@ var nicepic = function() {
         });
     }
 
+    function pixelate(img, sizeX, sizeY) {
+        return eachPixel(img, function(pixel, i, x, y) {
+            sizeY = sizeY || sizeX;
+            x = Math.floor(x / sizeX)*sizeX;
+            y = Math.floor(y / sizeY)*sizeY;
+
+            var pix = Pixel.fromImage(coordToIndex(img, x, y), img);
+            pixel.set(pix.r(), pix.g(), pix.b());
+        });
+    }
+
     function binary(img, threshold) {
         var pos = threshold >= 0 ? 255 : 0;
         var neg = threshold >= 0 ? 0 : 255;
         threshold = Math.abs(threshold);
-        return eachPixel(img, function(pixel, index) {
-            pixel.setGray(img.data[index] >= threshold ? pos : neg);
+        return eachPixel(img, function(pixel) {
+            pixel.setGray(pixel.l() >= threshold ? pos : neg);
+        });
+    }
+
+    function colorThreshold(img) {
+        var args = arguments;
+        return eachPixel(img, function(pixel) {
+            for (var i = 1; i < args.length; i++) {
+                var color = args[i].color;
+                var threshold = args[i].threshold;
+
+                var pix = new Pixel(color[0], color[1], color[2]);
+                var dist = Pixel.distance(pixel, pix);
+
+                if (threshold > 0 && dist < threshold ||
+                    threshold < 0 && dist > -threshold) {
+                    return;
+                }
+            }
+
+            pixel.setGray(0);
         });
     }
 
@@ -406,6 +488,36 @@ var nicepic = function() {
         return eachPixel(img, function(pixel) {
             pixel.invert();
         });
+    }
+
+    function paint(img, color) {
+        return eachPixel(img, function(pixel) {
+            pixel.set(color[0], color[1], color[2]);
+        });
+    }
+
+    function blur(img) {
+        return convolve2(img, BLUR_KERNEL_VH);
+    }
+
+    function sharpen(img) {
+        return convolve(img, SHARPEN_KERNEL);
+    }
+
+    function emboss(img) {
+        return convolve(img, EMBOSS_KERNEL, 125);
+    }
+
+    function laplace(img) {
+        return convolve(img, LAPLACE_KERNEL);
+    }
+
+    function sobel(img) {
+        return edgeDetect(img, SOBEL_XV, SOBEL_XH, SOBEL_YV, SOBEL_YH);
+    }
+
+    function prewitt(img) {
+        return edgeDetect(img, PREWITT_XV, PREWITT_XH, PREWITT_YV, PREWITT_YH);
     }
 
     function colorTransform(img, matrix) {
@@ -452,29 +564,7 @@ var nicepic = function() {
         }, opts);
     }
 
-    function blur(img) {
-        return convolve2(img, BLUR_KERNEL_VH);
-    }
 
-    function sharpen(img) {
-        return convolve(img, SHARPEN_KERNEL);
-    }
-
-    function emboss(img) {
-        return convolve(img, EMBOSS_KERNEL, 125);
-    }
-
-    function laplace(img) {
-        return convolve(img, LAPLACE_KERNEL);
-    }
-
-    function sobel(img) {
-        return edgeDetect(img, SOBEL_XV, SOBEL_XH, SOBEL_YV, SOBEL_YH);
-    }
-
-    function prewitt(img) {
-        return edgeDetect(img, PREWITT_XV, PREWITT_XH, PREWITT_YV, PREWITT_YH);
-    }
 
     function toCanvas(img, canvas, x, y, clear) {
         var c = typeof(canvas) === "string" ?
@@ -494,8 +584,13 @@ var nicepic = function() {
 
     return {
         load: load,
+        newImage : newImage,
         cpuPower : getCpuPower,
         setCpuPower : setCpuPower,
+        setMask : setMask,
+        getMask : getMask,
+        discardOutsideMask : discardOutsideMask,
+        toCanvas : toCanvas,
 
         //Unitary functions
         gray : gray,
@@ -513,7 +608,11 @@ var nicepic = function() {
         laplace : laplace,
         sobel : sobel,
         prewitt : prewitt,
+        pixelate : pixelate,
+        paint : paint,
+        colorThreshold : colorThreshold,
 
+        _setMask : setMask,
         _gray : gray,
         _sepia : sepia,
         _instantCamera : instantCamera,
@@ -529,7 +628,10 @@ var nicepic = function() {
         _laplace : laplace,
         _sobel : sobel,
         _prewitt : prewitt,
+        _pixelate : wrap(pixelate),
         _toCanvas : wrap(toCanvas),
+        _paint : wrap(paint),
+        _colorThreshold : wrap(colorThreshold),
 
         //Binary functions
         add : add,
