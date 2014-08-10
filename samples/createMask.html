@@ -1,0 +1,81 @@
+<html>
+<head>
+    <title>Color operation samples</title>
+    <script type="text/javascript" src="/src/pixel.js"></script>
+    <script type="text/javascript" src="/src/nicepic.js"></script>
+
+    <script type="text/javascript">
+        var image = nicepic.load("/img/fly.png");
+        function onLoad() {
+
+            nicepic.setMask(null);
+            image.then(function(img) {
+                nicepic.toCanvas(img, "original");
+                //Step 1: Create a rough mask over the fly
+                nicepic.newImage(img.width, img.height, function paint(ctx, w, h) {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0,0, w, h);
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(111,210, 54, 25);
+                    ctx.fillRect(119,234, 15, 13);
+                }).then(nicepic._setMask)
+                  .then(nicepic._toCanvas("step1"))
+                  .then(function() {
+                            //Step 2: Use binary to isolate the fly
+                            nicepic.discardOutsideMask();
+                            image.then(nicepic._binary(-102))
+                                 .then(nicepic._toCanvas("step2"))
+                                 .then(function(mask) {
+                                    //Step 3: Invert the mask to work with the background
+                                    nicepic.setMask(null);
+                                    nicepic.inverse(mask).then(nicepic._toCanvas("step3"))
+                                            .then(nicepic._setMask)
+                                            .then(function() {
+                                                //Generate the final image
+                                                image.then(nicepic._brightness(0.3))
+                                                     .then(nicepic._sepia)
+                                                     .then(nicepic._toCanvas("final"));
+                                            });
+                                 });
+                        })
+
+            });
+
+
+        }
+    </script>
+
+</head>
+<body onload="onLoad();">
+<p>Scroll down to see the effect.</p>
+<p>Original image.</p>
+<p>
+<canvas id="original" width="640" height="427">
+    Destination canvas
+</canvas>
+</p>
+<p>Step 1, we create a rough mask over the fly</p>
+<p>
+<canvas id="step1" width="640" height="427">
+    Destination canvas
+</canvas>
+</p>
+<p>Step 2, we use the threshold to isolate just the fly</p>
+<p>
+<canvas id="step2" width="640" height="427">
+    Destination canvas
+</canvas>
+<p>Step 3: Invert the mask, we want the background</p>
+<p>
+    <canvas id="step3" width="640" height="427">
+        Destination canvas
+    </canvas>
+</p>
+<p>Finally: generate the final image</p>
+<p>
+    <canvas id="final" width="640" height="427">
+        Destination canvas
+    </canvas>
+</p>
+</body>
+</html>

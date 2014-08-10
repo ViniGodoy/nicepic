@@ -5,75 +5,58 @@
     <script type="text/javascript" src="/src/nicepic.js"></script>
 
     <script type="text/javascript">
-        var image = nicepic.load("/img/fly.png");
-        function onLoad() {
+        var image = nicepic.load("/img/bird.png").then(nicepic._toCanvas("original"));
+        var mask = nicepic.load("/img/birdmask.png").then(nicepic._setMask).then(nicepic._toCanvas("mask"));
 
-            nicepic.setMask(null);
-            image.then(function(img) {
-                nicepic.toCanvas(img, "original");
-                //Step 1: Create a rough mask over the fly
-                nicepic.newImage(img.width, img.height, function paint(ctx, w, h) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(0,0, w, h);
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(111,210, 54, 25);
-                    ctx.fillRect(119,234, 15, 13);
-                }).then(nicepic._setMask)
-                  .then(nicepic._toCanvas("step1"))
-                  .then(function() {
-                            //Step 2: Use binary to isolate the fly
-                            nicepic.discardOutsideMask();
-                            image.then(nicepic._binary(-102))
-                                 .then(nicepic._toCanvas("step2"))
-                                 .then(function(mask) {
-                                    //Step 3: Invert the mask to work with the background
-                                    nicepic.setMask(null);
-                                    nicepic.inverse(mask).then(nicepic._toCanvas("step3"))
-                                            .then(nicepic._setMask)
-                                            .then(function() {
-                                                //Generate the final image
-                                                image.then(nicepic._brightness(0.3))
-                                                     .then(nicepic._sepia)
-                                                     .then(nicepic._toCanvas("final"));
-                                            });
-                                 });
-                        })
-
-            });
-
-
+        function btnSepia() {
+            image.then(nicepic._sepia)
+                    .then(nicepic._toCanvas("final"));
         }
+
+        function btnColorTransform() {
+            image.then(nicepic._colorTransform([1.0, 0.5, 0.5]))
+                 .then(nicepic._toCanvas("final"));
+        }
+
+        function btnGray() {
+            image.then(nicepic._gray)
+                 .then(nicepic._toCanvas("final"));
+        }
+        function btnBlack() {
+            image.then(nicepic._paint([0,0,50]))
+                    .then(nicepic._toCanvas("final"));
+        }
+
+        function btnInvertMask() {
+            nicepic.setMask(null);
+            mask = mask.then(nicepic._inverse).then(nicepic._setMask).then(nicepic._toCanvas("mask"));
+        }
+
     </script>
 
 </head>
-<body onload="onLoad();">
+<body>
 <p>Scroll down to see the effect.</p>
 <p>Original image.</p>
 <p>
-<canvas id="original" width="800" height="640">
-    Destination canvas
+<canvas id="original" width="640" height="427">
+    Source image canvas
 </canvas>
 </p>
-<p>Step 1, we create a rough mask over the fly</p>
+<p>Mask</p>
 <p>
-<canvas id="step1" width="800" height="640">
-    Destination canvas
+<canvas id="mask" width="640" height="427">
+    Mask
 </canvas>
 </p>
-<p>Step 2, we use the threshold to isolate just the fly</p>
+<button onclick="btnSepia()">Sepia</button>&nbsp;
+<button onclick="btnColorTransform()">Color transform</button>&nbsp;
+<button onclick="btnGray()">Grayscale</button>&nbsp;
+<button onclick="btnBlack()">Clear</button>&nbsp;
+<button onclick="btnInvertMask()">Invert mask</button>&nbsp;
+<p>Final image</p>
 <p>
-<canvas id="step2" width="800" height="640">
-    Destination canvas
-</canvas>
-<p>Step 3: Invert the mask, we want the background</p>
-<p>
-    <canvas id="step3" width="800" height="640">
-        Destination canvas
-    </canvas>
-</p>
-<p>Finally: generate the final image</p>
-<p>
-    <canvas id="final" width="800" height="640">
+    <canvas id="final" width="640" height="427">
         Destination canvas
     </canvas>
 </p>
