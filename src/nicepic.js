@@ -464,26 +464,6 @@ var nicepic = function() {
         });
     }
 
-    function colorThreshold(img) {
-        var args = arguments;
-        return eachPixel(img, function(pixel) {
-            for (var i = 1; i < args.length; i++) {
-                var color = args[i].color;
-                var threshold = args[i].threshold;
-
-                var pix = new Pixel(color[0], color[1], color[2]);
-                var dist = Pixel.distance(pixel, pix);
-
-                if (threshold > 0 && dist < threshold ||
-                    threshold < 0 && dist > -threshold) {
-                    return;
-                }
-            }
-
-            pixel.setGray(0);
-        });
-    }
-
     function inverse(img) {
         return eachPixel(img, function(pixel) {
             pixel.invert();
@@ -610,7 +590,6 @@ var nicepic = function() {
         prewitt : prewitt,
         pixelate : pixelate,
         paint : paint,
-        colorThreshold : colorThreshold,
 
         _setMask : setMask,
         _gray : gray,
@@ -631,7 +610,6 @@ var nicepic = function() {
         _pixelate : wrap(pixelate),
         _toCanvas : wrap(toCanvas),
         _paint : wrap(paint),
-        _colorThreshold : wrap(colorThreshold),
 
         //Binary functions
         add : add,
