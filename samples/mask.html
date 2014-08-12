@@ -10,7 +10,7 @@
 
         function btnSepia() {
             image.then(nicepic._sepia)
-                    .then(nicepic._toCanvas("final"));
+                 .then(nicepic._toCanvas("final"));
         }
 
         function btnColorTransform() {
@@ -22,6 +22,7 @@
             image.then(nicepic._gray)
                  .then(nicepic._toCanvas("final"));
         }
+
         function btnBlack() {
             image.then(nicepic._paint([0,0,50]))
                  .then(nicepic._toCanvas("final"));
@@ -49,11 +50,13 @@
     Mask
 </canvas>
 </p>
+<p>
 <button onclick="btnSepia()">Sepia</button>&nbsp;
 <button onclick="btnColorTransform()">Color transform</button>&nbsp;
 <button onclick="btnGray()">Grayscale</button>&nbsp;
 <button onclick="btnBlack()">Clear</button>&nbsp;
 <button onclick="btnInvertMask()">Invert mask</button>&nbsp;
+</p>
 <p>Final image</p>
 <p>
     <canvas id="final" width="640" height="427">

@@ -31,10 +31,12 @@
                 image.then(nicepic._laplace)
                      .then(nicepic._toCanvas("destination"));
             }
+
             function btnPrewitt() {
                 image.then(nicepic._prewitt)
                      .then(nicepic._toCanvas("destination"));
             }
+
             function btnSobel() {
                 image.then(nicepic._sobel)
                      .then(nicepic._toCanvas("destination"));
