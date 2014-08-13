@@ -71,12 +71,12 @@ var nicepic = function() {
             return Math.min(cpuPower, pixels);
         }
 
-        return cpuPower == 0 ? pixels : pixels * cpuPower;
+        return cpuPower === 0 ? pixels : pixels * cpuPower;
     }
 
     function setMask(img) {
         //If it's null, clears the mask
-        if (img == undefined || img == null) {
+        if (img === undefined || img === null) {
             mask = null;
             return;
         }
@@ -176,7 +176,7 @@ var nicepic = function() {
                     var y = Math.floor(i / (img.width * 4));
 
                     var pixel = Pixel.fromImage(i, img);
-                    if (!(mask && i < mask.data.length && Pixel.fromImage(i, mask).r() == 0))
+                    if (!(mask && i < mask.data.length && Pixel.fromImage(i, mask).r() === 0))
                         func(pixel, i, x, y);
                     else if (discardMask) {
                         pixel.setGray(0);
@@ -207,8 +207,7 @@ var nicepic = function() {
     }
 
     function get(tbl, key, def) {
-        return tbl == undefined || tbl == null ? def :
-            (tbl[key] == undefined || tbl[key] ==  null ? def : tbl[key]);
+        return tbl ? (tbl[key] ? tbl[key] : def) : def;
     }
 
     function adjustX(x, dst, src) {
@@ -249,7 +248,7 @@ var nicepic = function() {
             h = img2.height + h;
         }
 
-        if (get(opts, "p", undefined) == "center") {
+        if (get(opts, "p", undefined) === "center") {
             px = "center";
             py = "center";
         }
@@ -300,7 +299,7 @@ var nicepic = function() {
         var khSize = Math.floor(kSize / 2);
 
         return eachPixel(img, function(pixel, index, x, y) {
-            if (pixel.a() == 0)
+            if (pixel.a() === 0)
                 return;
 
             var sum = new Pixel();
@@ -324,7 +323,7 @@ var nicepic = function() {
         var kvhSize = Math.floor(kv.length / 2);
         var khhSize = Math.floor(kh.length / 2);
         return eachPixel(img, function (pixel, index, x, y) {
-            if (pixel.a() == 0)
+            if (pixel.a() === 0)
                 return;
 
             var sum = new Pixel();
@@ -337,7 +336,7 @@ var nicepic = function() {
             pixel.set(sum.r() + bias, sum.g() + bias, sum.b() + bias);
         }).then(function(img) {
             return eachPixel(img, function (pixel, index, x, y) {
-                if (pixel.a() == 0)
+                if (pixel.a() === 0)
                     return;
 
                 var sum = new Pixel();

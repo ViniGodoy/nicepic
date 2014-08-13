@@ -185,24 +185,24 @@ var Pixel = (function() {
         var b = this.b();
         var a = this.a();
 
-        if (matrix.length == 3) {
+        if (matrix.length === 3) {
             r = this.r() * matrix[0];
             g = this.g() * matrix[1];
             b = this.b() * matrix[2];
-        } else if (matrix.length == 4) {
+        } else if (matrix.length === 4) {
             r = this.r() * matrix[0];
             g = this.g() * matrix[1];
             b = this.b() * matrix[2];
             a = this.a() * matrix[3];
-        } else if (matrix.length == 9) {
+        } else if (matrix.length === 9) {
             r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2];
             g = this.r() * matrix[3] + this.g() * matrix[4] + this.b() * matrix[5];
             b = this.r() * matrix[6] + this.g() * matrix[7] + this.b() * matrix[8];
-        } else if (matrix.length == 12) {
+        } else if (matrix.length === 12) {
             r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2] + 255 * matrix[3];
             g = this.r() * matrix[4] + this.g() * matrix[5] + this.b() * matrix[6] + 255 * matrix[7];
             b = this.r() * matrix[8] + this.g() * matrix[9] + this.b() * matrix[10] + 255 * matrix[11];
-        } else if (matrix.length == 20) {
+        } else if (matrix.length === 20) {
             r = this.r() * matrix[0] + this.g() * matrix[1] + this.b() * matrix[2] + this.a() * matrix[3] + 255 * matrix[4];
             g = this.r() * matrix[5] + this.g() * matrix[6] + this.b() * matrix[7] + this.a() * matrix[8] + 255 * matrix[9];
             b = this.r() * matrix[10] + this.g() * matrix[11] + this.b() * matrix[12] + this.a() * matrix[13] + 255 * matrix[14];
